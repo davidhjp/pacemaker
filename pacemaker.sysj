@@ -9,7 +9,7 @@ reaction AtriumSensor(:
 	signal PVARP,VentricularActivity;
 	{ // Checking atrium Activity
 		while(true) {
-			if(#atriumActivityOccured == false){
+			if(#atriumActivityOccured == Boolean.TRUE){
 				present(PVARP){
 					trap(IntrinsicAA){
 						trap(VAIExpired){
