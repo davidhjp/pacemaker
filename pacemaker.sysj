@@ -1,3 +1,8 @@
+/**
+ * The cardiac pacemaker
+ *
+ * @author Heejong Park
+ */
 import org.pacemaker.*;
 
 reaction AtriumSensorPacer(:
