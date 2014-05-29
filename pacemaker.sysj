@@ -49,7 +49,7 @@ reaction AtriumSensorPacer(:
 								emit ventricularActivityOccured(false);
 								emit atriumActivityOccured(true);
 								System.out.println("A : Atrium paced");
-							} else { System.out.println("A : Time elapse since last atrium activity >= VAI, NOT pacing..."); }
+							} else { System.out.println("A : Time elapse since last atrium activity <= VAI, NOT pacing..."); }
 						}
 					} do{
 						// Intrinsic Atrium activity sensed
@@ -157,7 +157,7 @@ reaction VentricularSensorPacer(:
 						emit atriumActivityOccured(false);
 						System.out.println("V : Ventrium paced");
 						emit ventricularActivityOccured(true);
-					} else { System.out.println("V : Time elapse since last ventricular activity >= PVARP+VAI, NOT pacing..."); }
+					} else { System.out.println("V : Time elapse since last ventricular activity <= PVARP+VAI, NOT pacing..."); }
 					pause;
 				}
 			}
