@@ -10,9 +10,11 @@ reaction AtriumSensorPacer(:
 		input signal lastVentricularActivity,
 		output boolean signal lastAtriumActivity, 
 		output boolean signal atriumActivityOccured, 
-		output boolean signal ventricularActivityOccured)
+		output boolean signal ventricularActivityOccured,
+		output signal VAI
+		)
 {
-	signal PVARP,VAI,VAI2;
+	signal PVARP,VAI2;
 	{ // Checking atrium Activity
 		while(true) {
 			if(#atriumActivityOccured == Boolean.FALSE){
@@ -32,9 +34,9 @@ reaction AtriumSensorPacer(:
 								pause;
 							}
 						} do{
-							System.out.println("A : PWAVE NOT detected!");
 							// Time elapse since lastVentricularActivity >= VAI
-							emit atriumActivityOccured(true);
+							System.out.println("A : PWAVE NOT detected!");
+						
 							// Time elapse since atrium activity >= VAI
 							present(VAI2){
 								// release atrium paceer
@@ -45,8 +47,9 @@ reaction AtriumSensorPacer(:
 									loop { i = i + 1; pause; if(i == 2) exit (T1); }
 								}
 								emit ventricularActivityOccured(false);
+								emit atriumActivityOccured(true);
 								System.out.println("A : Atrium paced");
-							}
+							} else { System.out.println("A : Time elapse since last atrium activity >= VAI, NOT pacing..."); }
 						}
 					} do{
 						// Intrinsic Atrium activity sensed
@@ -97,7 +100,7 @@ reaction AtriumSensorPacer(:
 						int i = 0;
 						while(true) { i = i + 1; pause; if(i >= Intervals.VAI) exit (T); }
 					}
-					// If time elapsed since lastAtriumActivity >= PVARP
+					// If time elapsed since lastAtriumActivity >= VAI
 					sustain VAI2;
 				}
 				pause;
@@ -111,7 +114,9 @@ reaction VentricularSensorPacer(:
 		output boolean signal atriumActivityOccured,
 		output boolean signal ventricularActivityOccured,
 		input signal lastAtriumActivity,
-		input signal QRScomplex
+		input signal QRScomplex,
+		input signal VAI,
+		input signal DDIR
 		)
 {
 	signal AVI,PVARPAVI;
@@ -135,6 +140,8 @@ reaction VentricularSensorPacer(:
 						System.out.println("V : QRSComplex detected!");
 						emit lastVentricularActivity;
 						emit atriumActivityOccured(false);
+						emit ventricularActivityOccured(true);
+						System.out.println("V : Intrinsic activity sensed");
 					}
 				} do{
 					System.out.println("V : QRSComplex NOT detected");
@@ -148,12 +155,11 @@ reaction VentricularSensorPacer(:
 							while (true) { i = i + 1; pause; if(i == 2) exit(T); }
 						}
 						emit atriumActivityOccured(false);
-						System.out.println("V : Ventricular paced");
-					}
+						System.out.println("V : Ventrium paced");
+						emit ventricularActivityOccured(true);
+					} else { System.out.println("V : Time elapse since last ventricular activity >= PVARP+VAI, NOT pacing..."); }
 					pause;
 				}
-				emit ventricularActivityOccured(true);
-				// TODO: Check for mode change
 			}
 			pause;
 		}
@@ -168,6 +174,8 @@ reaction VentricularSensorPacer(:
 						while(true) { i = i + 1; pause; if(i >= Intervals.AVI) exit (T); }
 					}
 					sustain AVI;
+				} do{
+					present(DDIR){await(immediate VAI);	}
 				}
 				pause;
 			}
@@ -189,20 +197,79 @@ reaction VentricularSensorPacer(:
 }
 
 pace->{
-	signal PWAVE,QRScomplex;
+	signal PWAVE,QRScomplex,VAI,DDIR;
+	int signal STATE;
 	boolean signal lastVentricularActivity,lastAtriumActivity,atriumActivityOccured,ventricularActivityOccured;
 	// Initialization
-	emit ventricularActivityOccured(false);
+	emit ventricularActivityOccured(true);
 	emit atriumActivityOccured(false);
+	emit STATE(0);
 	pause;
 
-	AtriumSensorPacer(:PWAVE,lastVentricularActivity,lastAtriumActivity,atriumActivityOccured,ventricularActivityOccured)
-	||
-	VentricularSensorPacer(:lastVentricularActivity,atriumActivityOccured,ventricularActivityOccured,lastAtriumActivity,QRScomplex)
-	||
-	{
-		// Test-bench
-		
+	while(true){
+		trap(RESTART){
+			AtriumSensorPacer(:PWAVE,lastVentricularActivity,lastAtriumActivity,atriumActivityOccured,ventricularActivityOccured,VAI)
+			||
+			VentricularSensorPacer(:lastVentricularActivity,atriumActivityOccured,ventricularActivityOccured,lastAtriumActivity,QRScomplex,VAI,DDIR)
+			||
+			{
+				// Test-bench
+				if(((Integer)#STATE).intValue() == 0){
+					Intervals.printA();
+					trap(T){
+						int i = 0;
+						while (true) { i = i + 1; pause; if(i >= (Intervals.VAI + Intervals.AVI)*2) exit(T); }
+					}
+					exit(RESTART);
+				}
+				else if(((Integer)#STATE).intValue() == 1){
+					Intervals.printB();
+					int l = 0;
+					while(true){
+						await(lastAtriumActivity);
+						trap(T){
+							int i = 0;
+							while (true) { i = i + 1; pause; if(i >= 4) exit(T); }
+						}
+						trap(T){
+							int i = 0;
+							while (true) { i = i + 1; emit QRScomplex; pause; if(i >= Intervals.QRS+1) exit(T); }
+						}
+						l++;
+						if(l == 2) 
+							exit(RESTART);
+					}
+				}
+				else if(((Integer)#STATE).intValue() == 2){
+					Intervals.printC();
+					System.out.println("===== DDDR Mode =====");
+					// Waiting to PVARP
+					trap(T){
+						int i = 0;
+						while (true) { i = i + 1; pause; if(i >= Intervals.PVARP+1) exit(T); }
+					}
+					trap(T){
+						int i = 0;
+						while (true) { i = i + 1; emit PWAVE; pause; if(i >= Intervals.P+1) exit(T); }
+					}
+					await(lastVentricularActivity);
+					trap(T){
+						int i = 0;
+						while (true) { i = i + 1; emit PWAVE; pause; if(i >= 5) exit(T); }
+					}
+					Intervals.terminate();
+
+				}
+			}
+		} do { 
+			int st = ((Integer)#STATE).intValue(); 
+			emit STATE(st++); 
+			// Re-initialization
+			emit ventricularActivityOccured(true);
+			emit atriumActivityOccured(false);
+			pause;
+			pause;
+		}
 	}
 
 }
