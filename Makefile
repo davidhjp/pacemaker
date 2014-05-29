@@ -4,18 +4,24 @@ else
 	S=\;
 endif
 
-ifeq ($(SILENCE),true)
+ifeq ($(SILENCE),false)
+	override SILENCE=
+else
 	override SILENCE=--silence
 endif
 
+
 all:
-ifeq ($(SYSJHOME),)
-	$(error SYSJHOME variable is not set)
+ifeq ($(SYSJ_HOME),)
+	$(error SYSJ_HOME variable is not set)
 endif
-	$(JAVA_HOME)/bin/java -cp .$(S)$(SYSJHOME) JavaPrettyPrinter $(SILENCE) pacemaker.sysj
+ifeq ($(JAVA_HOME),)
+	$(error JAVA_HOME variable is not set)
+endif
+	$(JAVA_HOME)/bin/java -cp .$(S)$(SYSJ_HOME) JavaPrettyPrinter $(SILENCE) pacemaker.sysj
 
 run:
-	$(JAVA_HOME)/bin/java -cp .$(S)$(SYSJHOME)$(S)$(SYSJHOME)/* systemj.bootstrap.SystemJRunner pacemaker.xml
+	$(JAVA_HOME)/bin/java -cp .$(S)$(SYSJ_HOME)$(S)$(SYSJ_HOME)/* systemj.bootstrap.SystemJRunner pacemaker.xml
 
 clean:
 	rm -f *.class *.java

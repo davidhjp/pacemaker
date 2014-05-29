@@ -54,6 +54,7 @@ reaction AtriumSensorPacer(:
 					} do{
 						// Intrinsic Atrium activity sensed
 						emit lastAtriumActivity;
+						pause; // this pause is needed to prevent sensing AVI in Ventrium when switching or make non-immediate for AVI in vent pacer
 						emit atriumActivityOccured(true);
 						emit ventricularActivityOccured(false);
 						System.out.println("A : Intrinsic activity sensed");
@@ -175,7 +176,10 @@ reaction VentricularSensorPacer(:
 					}
 					sustain AVI;
 				} do{
-					present(DDIR){await(immediate VAI);	}
+					present(DDIR){
+						System.out.println("V : Waiting on VAI since it is in DDIR mode");
+						await(immediate VAI);	
+					}
 				}
 				pause;
 			}
@@ -213,7 +217,7 @@ pace->{
 			VentricularSensorPacer(:lastVentricularActivity,atriumActivityOccured,ventricularActivityOccured,lastAtriumActivity,QRScomplex,VAI,DDIR)
 			||
 			{
-				// Test-bench
+				// Test-bench reaction (plant model)
 				if(((Integer)#STATE).intValue() == 0){
 					Intervals.printA();
 					trap(T){
@@ -255,10 +259,52 @@ pace->{
 					await(lastVentricularActivity);
 					trap(T){
 						int i = 0;
-						while (true) { i = i + 1; emit PWAVE; pause; if(i >= 5) exit(T); }
+						while (true) { i = i + 1; pause; if(i >= Intervals.PVARP+10) exit(T); }
 					}
-					Intervals.terminate();
-
+					System.out.println("===== DDIR Mode =====");
+					{ // Mode change
+						sustain DDIR;
+					}
+					||
+					{
+						pause;
+						trap(T){
+							int i = 0;
+							while (true) { i = i + 1; emit PWAVE; pause; if(i >= Intervals.P+1) exit(T); }
+						}
+						await(lastVentricularActivity);
+						trap(T){
+							int i = 0;
+							while (true) { i = i + 1; pause; if(i >= 10) exit(T); }
+						}
+						exit(RESTART);
+					}
+				}
+				else if(((Integer)#STATE).intValue() == 3){
+					Intervals.printD();
+					int l = 0;
+					while(true){
+						trap(T){
+							int i = 0;
+							while (true) { i = i + 1; pause; if(i >= Intervals.PVARP+1) exit(T); }
+						}
+						trap(T){
+							int i = 0;
+							while (true) { i = i + 1; emit PWAVE; pause; if(i >= Intervals.P+1) exit(T); }
+						}
+						trap(T){
+							int i = 0;
+							while (true) { i = i + 1; pause; if(i >= 4) exit(T); }
+						}
+						trap(T){
+							int i = 0;
+							while (true) { i = i + 1; emit QRScomplex; pause; if(i >= Intervals.QRS+1) exit(T); }
+						}
+						await(lastVentricularActivity);
+						l++;
+						if(l == 3)
+							Intervals.terminate();
+					}
 				}
 			}
 		} do { 

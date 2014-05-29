@@ -31,6 +31,14 @@ public class Intervals {
 											 "             after AVI (due to a lack of intrinsic ventricular activity)             ");
 		System.out.println("======================================================================================");
 	}
+
+	public static void printD(){
+		System.out.println("======================================================================================");
+		System.out.println("Scenario D - represents the case where both pacing activities are inhibited due to a \n"+
+											 "             sensing of intrinstic activities in both chambers												 ");
+		System.out.println("======================================================================================");
+	}
+
 	public static void terminate(){System.exit(1);}
 	
 }
