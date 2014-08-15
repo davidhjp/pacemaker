@@ -13,7 +13,7 @@ else
 endif
 
 ifeq ($(JOP_HOME),)
-	$(error JOP_HOME variable is not set)
+$(error JOP_HOME variable is not set)
 endif
 
 all:
