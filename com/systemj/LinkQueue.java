@@ -1,4 +1,4 @@
-package systemj.common.util;
+package com.systemj;
 
 import java.util.Vector;
 
@@ -8,8 +8,8 @@ public class LinkQueue {
 	private int currentsize = 0;
 
 	// Although Vector is thread-safe, use custom synchronized method
-	public synchronized boolean push(Object o){
-		if(q.size() < MAX_SIZE){
+	public synchronized boolean push(Object o) {
+		if (q.size() < MAX_SIZE) {
 			q.addElement(o);
 			currentsize = q.size();
 			return true;
@@ -18,17 +18,22 @@ public class LinkQueue {
 		return false;
 	}
 	
-	public synchronized Object pop(){
+	public synchronized Object pop() {
 		Object o = null;
-		if(q.size() > 0){
+		if (q.size() > 0) {
 			o = q.elementAt(0);
 			q.removeElementAt(0);
 		}
 		currentsize = q.size();
 		return o;
 	}
-	
-	public boolean isFull(){ return currentsize > MAX_SIZE; }
-	public boolean isEmpty(){ return currentsize == 0; }
+
+	public boolean isFull() {
+		return currentsize > MAX_SIZE;
+	}
+
+	public boolean isEmpty() {
+		return currentsize == 0;
+	}
 	
 }

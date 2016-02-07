@@ -1,7 +1,4 @@
-package systemj.interfaces;
-
-import systemj.bootstrap.ClockDomain;
-import systemj.common.BaseInterface;
+package com.systemj;
 
 /**
  * Scheduler interface.
@@ -9,13 +6,11 @@ import systemj.common.BaseInterface;
  * @author hpar081
  *
  */
-public abstract class Scheduler extends BaseInterface{
+public abstract class Scheduler extends Container {
 	
-	/**
-	 * Adding clock-domain instance to this scheduler
-	 * @param cd
-	 */
-	public abstract void addClockDomain(ClockDomain cd);
+	public SystemJProgram getParent(){
+		return (SystemJProgram)super.getParent();
+	}
 	
 	/**
 	 * Run this scheduler. This method must be non-blocking
@@ -30,7 +25,7 @@ public abstract class Scheduler extends BaseInterface{
 	 */
 	public final void tick(ClockDomain cd){
 		cd.run();
-		super.runInterfaceManager();
+		this.getParent().getInterfaceManager().run();
 	}
 	
 	/**

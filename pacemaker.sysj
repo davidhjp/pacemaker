@@ -17,7 +17,7 @@ reaction AtriumSensorPacer(:
 	signal PVARP,VAI2;
 	{ // Checking atrium Activity
 		while(true) {
-			if(#atriumActivityOccured == Boolean.FALSE){
+			if(#atriumActivityOccured.equals(Boolean.FALSE)){
 				present(PVARP){
 					trap(IntrinsicAA){
 						// Reading a sensor
@@ -123,7 +123,7 @@ reaction VentricularSensorPacer(:
 	signal AVI,PVARPAVI;
 	{
 		while(true){
-			if(#ventricularActivityOccured == Boolean.FALSE){
+			if(#ventricularActivityOccured.equals(Boolean.FALSE)){
 				// Reading a sensor
 				abort(immediate AVI){
 					trap(IntrinsicQRS){

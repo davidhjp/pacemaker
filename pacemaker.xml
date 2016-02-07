@@ -1,4 +1,4 @@
-<System>
+<System xmlns="http://systemjtechnology.com">
 	<SubSystem Name="Top" Local="true">
 		<ClockDomain Name="CD" Class="pace"/>
 	</SubSystem>

@@ -1,10 +1,10 @@
-package systemj.common;
+package com.systemj;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import systemj.interfaces.GenericInterface;
+import com.systemj.ipc.GenericInterface;
 
 /**
  * Must be compatible with CLDC 1.1
@@ -13,7 +13,7 @@ import systemj.interfaces.GenericInterface;
  * 
  * @author hpar081
  */
-public class Interconnection {
+public class Interconnection extends Container{
 	private Vector LocalLinks = new Vector();
 	private Vector DestLinks = new Vector();
 	
@@ -30,7 +30,6 @@ public class Interconnection {
 			InterfaceMap.put(SS, gct);
 		}
 	}
-	
 	
 	public void printInterconnection(){
 		System.out.println("Local links : ");
@@ -64,8 +63,8 @@ public class Interconnection {
 	}
 	
 	/**
-	 * @param ssname
-	 * @return Returns Vector array of interfaces with the Subsystem ssname
+	 * @param ssname Subsystem name
+	 * @return Returns an array of interfaces with the Subsystem ssname
 	 */
 	public Vector getInterfaces(String ssname){
 		Vector l = new Vector();
@@ -90,7 +89,7 @@ public class Interconnection {
 	 * @param target Remote SubSystem name
 	 * @return Vector array of GenericInterfaces that can be used for transmitting data.
 	 */
-	public Vector getInterfaces(String me, String target){
+	public Vector getConnectedInterfaces(String me, String target){
 		Vector l = new Vector();
 		for(int i=0;i<LocalLinks.size(); i++){
 			GenericInterface local = (GenericInterface)((Link)LocalLinks.elementAt(i)).InterfaceMap.get(me);
@@ -104,6 +103,26 @@ public class Interconnection {
 			GenericInterface remote = (GenericInterface)((Link)DestLinks.elementAt(i)).InterfaceMap.get(target);
 			if(remote !=null && local !=null)
 				l.addElement(remote); // Using remote's (e.g. TCP/IP)
+		}
+		return l;
+	}
+	
+	public Vector getAllConnectedInterfaces(String ssname){
+		Vector l = new Vector();
+		for(int i=0;i<LocalLinks.size(); i++){
+			if(((Link)LocalLinks.elementAt(i)).InterfaceMap.containsKey(ssname)){
+				 Enumeration e = ((Link)LocalLinks.elementAt(i)).InterfaceMap.elements();
+				 while(e.hasMoreElements())
+					 l.add(e.nextElement());
+			}
+
+		}
+		for(int i=0; i<DestLinks.size() ; i++){
+			if(((Link)DestLinks.elementAt(i)).InterfaceMap.containsKey(ssname)){
+				 Enumeration e = ((Link)DestLinks.elementAt(i)).InterfaceMap.elements();
+				 while(e.hasMoreElements())
+					 l.add(e.nextElement());
+			}
 		}
 		return l;
 	}
