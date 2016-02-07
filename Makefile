@@ -14,10 +14,6 @@ else
 	override SILENCE=--silence
 endif
 
-ifeq ($(JOP_HOME),)
-$(error JOP_HOME variable is not set)
-endif
-
 all:
 	$(SYSJC) $(SILENCE) --nojavac pacemaker.sysj
 
@@ -25,7 +21,7 @@ run-desktop: all
 	javac -cp $(SYSJ_HOME)/lib/\*$(S). pace.java
 	$(SYSJR) pacemaker.xml
 
-run-jop: all
+run-jop: check all
 	rm -rfv $(JOP_HOME)/java/target/src/sysjdemo
 	mkdir $(JOP_HOME)/java/target/src/sysjdemo
 	mkdir $(JOP_HOME)/java/target/src/sysjdemo/pacemaker
@@ -40,3 +36,8 @@ run-jop: all
 clean:
 	rm -f *.class *.java
 	rm -f org/pacemaker/*.class
+
+check:
+ifeq ($(JOP_HOME),)
+	$(error JOP_HOME variable is not set)
+endif
